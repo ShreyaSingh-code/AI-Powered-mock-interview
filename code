@@ -1,0 +1,745 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>AI Mock Interview Platform</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet"/>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --accent:#4f46e5;--accent-light:#eef2ff;
+  --success:#059669;--warning:#d97706;--danger:#dc2626;
+  --bg:#f9f9fb;--card:#fff;--surface:#f3f4f6;
+  --border:#e5e7eb;--text:#111827;--muted:#6b7280;
+  --radius:10px;--radius-lg:14px;
+}
+body{font-family:'Inter',system-ui,sans-serif;background:var(--bg);color:var(--text);min-height:100vh;display:flex;flex-direction:column}
+nav{background:var(--card);border-bottom:1px solid var(--border);padding:0 2rem;height:56px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:10}
+.nav-logo{display:flex;align-items:center;gap:10px;font-size:15px;font-weight:600;color:var(--text);text-decoration:none}
+.nav-icon{width:32px;height:32px;background:var(--accent);border-radius:8px;display:flex;align-items:center;justify-content:center;color:#fff;font-size:16px}
+.nav-badge{font-size:11px;padding:3px 8px;background:var(--accent-light);color:var(--accent);border-radius:20px;font-weight:500}
+main{flex:1;max-width:780px;width:100%;margin:0 auto;padding:2rem 1.5rem 3rem}
+.screen{display:none}.screen.active{display:block}
+/* SETUP */
+.hero{text-align:center;padding:2rem 0 2.5rem}
+.hero h1{font-size:28px;font-weight:600;letter-spacing:-0.5px}
+.hero p{font-size:15px;color:var(--muted);margin-top:8px;max-width:480px;margin-left:auto;margin-right:auto;line-height:1.6}
+.steps{display:flex;justify-content:center;gap:24px;margin-top:1.5rem;flex-wrap:wrap}
+.step{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--muted)}
+.step-dot{width:20px;height:20px;border-radius:50%;background:var(--accent-light);color:var(--accent);font-size:11px;font-weight:600;display:flex;align-items:center;justify-content:center}
+.card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius-lg);padding:1.5rem;margin-bottom:16px}
+.card-title{font-size:13px;font-weight:500;color:var(--muted);margin-bottom:12px}
+.setup-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px}
+textarea{width:100%;font-family:'Inter',sans-serif;font-size:13px;color:var(--text);background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:12px;resize:none;line-height:1.65;transition:border-color .15s,box-shadow .15s}
+textarea:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px rgba(79,70,229,.08);background:var(--card)}
+#resume-input,#jd-input{height:150px}
+.config-row{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;margin-bottom:20px}
+.config-item label{display:block;font-size:12px;font-weight:500;color:var(--muted);margin-bottom:7px}
+select{width:100%;font-family:'Inter',sans-serif;font-size:13px;color:var(--text);background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:9px 12px;cursor:pointer}
+select:focus{outline:none;border-color:var(--accent)}
+.btn-primary{width:100%;padding:14px;background:var(--accent);color:#fff;border:none;border-radius:var(--radius);font-family:'Inter',sans-serif;font-size:15px;font-weight:500;cursor:pointer;transition:background .15s,opacity .15s}
+.btn-primary:hover:not(:disabled){background:#4338ca}
+.btn-primary:disabled{opacity:.45;cursor:not-allowed}
+.btn-secondary{padding:10px 16px;background:transparent;color:var(--muted);border:1px solid var(--border);border-radius:var(--radius);font-family:'Inter',sans-serif;font-size:13px;cursor:pointer;transition:background .15s}
+.btn-secondary:hover{background:var(--surface);color:var(--text)}
+.err-msg{font-size:13px;color:var(--danger);padding:10px 14px;background:#fef2f2;border:1px solid #fecaca;border-radius:var(--radius);margin-top:10px;display:none}
+/* INTERVIEW */
+.iv-header{display:flex;align-items:center;justify-content:space-between;background:var(--card);border:1px solid var(--border);border-radius:var(--radius-lg);padding:1rem 1.25rem;margin-bottom:1rem}
+.iv-meta{display:flex;align-items:center;gap:10px}
+.pill{font-size:12px;font-weight:500;padding:4px 12px;border-radius:20px}
+.pill-q{background:var(--accent-light);color:var(--accent)}
+.pill-easy{background:#d1fae5;color:#065f46}
+.pill-medium{background:#fef3c7;color:#92400e}
+.pill-hard{background:#fee2e2;color:#991b1b}
+.iv-right{display:flex;align-items:center;gap:16px}
+.score-live{text-align:right}
+.score-live-label{font-size:11px;color:var(--muted)}
+.score-live-val{font-size:20px;font-weight:600;color:var(--text);line-height:1.1}
+.timer-ring{position:relative;width:52px;height:52px}
+.timer-ring svg{position:absolute;top:0;left:0;transform:rotate(-90deg)}
+.timer-text{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:600;color:var(--accent);transition:color .3s}
+.timer-text.warn{color:var(--warning)}.timer-text.danger{color:var(--danger)}
+.progress-wrap{margin-bottom:1rem}
+.progress-track{height:4px;background:var(--border);border-radius:2px}
+.progress-fill{height:100%;background:var(--accent);border-radius:2px;transition:width .5s ease}
+.q-card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius-lg);padding:1.5rem;margin-bottom:1rem;min-height:110px}
+.q-type-tag{font-size:11px;font-weight:600;color:var(--accent);text-transform:uppercase;letter-spacing:.07em;margin-bottom:10px}
+.q-body{font-size:16px;line-height:1.7;color:var(--text);min-height:50px}
+.q-hint{font-size:12px;color:var(--muted);margin-top:10px;padding-top:10px;border-top:1px solid var(--border)}
+#answer-input{height:140px;margin-bottom:1rem}
+.action-row{display:flex;gap:10px;align-items:center;margin-bottom:1rem}
+.action-row .btn-primary{flex:1;padding:12px;font-size:14px}
+.eval-panel{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:12px 14px;font-size:13px;color:var(--muted);min-height:44px;margin-bottom:1rem;line-height:1.6}
+.badges{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:6px}
+.badge{font-size:11px;font-weight:500;padding:3px 9px;border-radius:20px}
+.badge-good{background:#d1fae5;color:#065f46}
+.badge-avg{background:#fef3c7;color:#92400e}
+.badge-bad{background:#fee2e2;color:#991b1b}
+.threshold-section{margin-bottom:1rem}
+.th-header{display:flex;justify-content:space-between;font-size:12px;color:var(--muted);margin-bottom:5px}
+.th-track{height:6px;background:var(--border);border-radius:3px;position:relative;overflow:visible}
+.th-fill{height:100%;border-radius:3px;transition:width .6s,background .3s}
+.th-marker{position:absolute;top:-5px;width:2px;height:16px;background:var(--danger);border-radius:1px;left:30%}
+.history-list{display:flex;flex-direction:column;gap:6px}
+.history-item{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:8px 12px;display:flex;justify-content:space-between;align-items:center;font-size:12px}
+.history-q{color:var(--muted);flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin-right:10px}
+/* TERMINATED */
+.terminated-wrap{text-align:center;padding:3rem 2rem}
+.terminated-icon-wrap{width:72px;height:72px;border-radius:50%;background:#fee2e2;color:var(--danger);font-size:32px;display:flex;align-items:center;justify-content:center;margin:0 auto 1.5rem}
+.terminated-wrap h2{font-size:22px;font-weight:600;margin-bottom:10px}
+.terminated-wrap p{font-size:14px;color:var(--muted);max-width:420px;margin:0 auto 2rem;line-height:1.65}
+.terminated-wrap .btn-primary{max-width:280px;margin:0 auto;display:block}
+/* RESULTS */
+.results-top{text-align:center;padding:2rem 0 2.5rem}
+.score-ring-wrap{display:flex;justify-content:center;margin-bottom:1.25rem}
+.score-ring{position:relative;width:140px;height:140px}
+.score-ring svg{transform:rotate(-90deg)}
+.score-ring-inner{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center}
+.score-big{font-size:38px;font-weight:700;color:var(--text);line-height:1}
+.score-sub{font-size:12px;color:var(--muted);margin-top:2px}
+.readiness-badge{display:inline-block;padding:6px 18px;border-radius:20px;font-size:14px;font-weight:500;margin-bottom:6px}
+.rb-strong{background:#d1fae5;color:#065f46}
+.rb-avg{background:#fef3c7;color:#92400e}
+.rb-weak{background:#fee2e2;color:#991b1b}
+.results-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px}
+.result-card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius-lg);padding:1.25rem}
+.rc-head{font-size:13px;font-weight:500;color:var(--muted);margin-bottom:14px}
+.skill-row{display:flex;align-items:center;gap:8px;margin-bottom:10px}
+.skill-name{font-size:12px;color:var(--text);width:120px;flex-shrink:0}
+.skill-bar-bg{flex:1;height:5px;background:var(--border);border-radius:3px;overflow:hidden}
+.skill-bar-fill{height:100%;border-radius:3px}
+.skill-val{font-size:12px;color:var(--muted);width:30px;text-align:right}
+.sw-list{list-style:none}
+.sw-list li{font-size:13px;color:var(--text);padding:5px 0;display:flex;gap:8px;align-items:flex-start;line-height:1.55;border-bottom:1px solid var(--border)}
+.sw-list li:last-child{border-bottom:none}
+.sw-list li span.icon{flex-shrink:0;font-size:14px;margin-top:1px}
+.feedback-block{background:var(--card);border:1px solid var(--border);border-radius:var(--radius-lg);padding:1.25rem;margin-bottom:14px}
+.feedback-block h3{font-size:13px;font-weight:500;color:var(--muted);margin-bottom:12px}
+.feedback-item{font-size:13px;color:var(--text);padding:10px 12px;background:var(--surface);border-left:3px solid var(--accent);border-radius:0 var(--radius) var(--radius) 0;margin-bottom:8px;line-height:1.6}
+.hiring-block{background:var(--card);border:1px solid var(--border);border-radius:var(--radius-lg);padding:1.25rem;display:flex;align-items:center;gap:16px;margin-bottom:20px}
+.hiring-icon-wrap{font-size:36px;flex-shrink:0}
+.hiring-title{font-size:15px;font-weight:600;margin-bottom:4px}
+.hiring-detail{font-size:13px;color:var(--muted);line-height:1.6}
+.q-sessions{background:var(--card);border:1px solid var(--border);border-radius:var(--radius-lg);padding:1.25rem;margin-bottom:20px}
+.q-sessions h3{font-size:13px;font-weight:500;color:var(--muted);margin-bottom:12px}
+.session-item{padding:10px 0;border-bottom:1px solid var(--border);font-size:13px}
+.session-item:last-child{border-bottom:none}
+.session-q{color:var(--muted);margin-bottom:4px;font-size:12px}
+.session-ans{color:var(--text);margin-bottom:4px;line-height:1.5}
+.session-score{font-weight:600}
+footer{text-align:center;padding:1.5rem;font-size:12px;color:var(--muted);border-top:1px solid var(--border)}
+@media(max-width:600px){.setup-grid,.config-row,.results-grid{grid-template-columns:1fr}nav{padding:0 1rem}main{padding:1.25rem 1rem 2rem}}
+</style>
+</head>
+<body>
+<nav>
+  <div class="nav-logo"><div class="nav-icon">🎯</div>AI Interview Platform</div>
+  <span class="nav-badge">AI Powered</span>
+</nav>
+<main>
+
+<!-- SETUP -->
+<div id="screen-setup" class="screen active">
+  <div class="hero">
+    <h1>Prepare. Practice. Succeed.</h1>
+    <p>An AI-powered mock interview that adapts to your resume, evaluates every answer, and gives you an objective readiness score.</p>
+    <div class="steps">
+      <div class="step"><div class="step-dot">1</div>Paste your resume &amp; JD</div>
+      <div class="step"><div class="step-dot">2</div>Answer adaptive questions</div>
+      <div class="step"><div class="step-dot">3</div>Get detailed feedback</div>
+    </div>
+  </div>
+  <div class="setup-grid">
+    <div class="card">
+      <div class="card-title">📄 Your resume</div>
+      <textarea id="resume-input" placeholder="Paste your resume here...
+
+Include: skills, experience, education, projects.
+
+Example:
+- 3 years Python/Django backend
+- REST APIs, PostgreSQL, Redis
+- Built e-commerce platform
+- B.Tech CS, 2022"></textarea>
+    </div>
+    <div class="card">
+      <div class="card-title">💼 Job description</div>
+      <textarea id="jd-input" placeholder="Paste the job description here...
+
+Include: role, responsibilities, required skills.
+
+Example:
+Senior Backend Engineer
+- 3+ years Python
+- Django/FastAPI
+- AWS, Docker
+- Microservices"></textarea>
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-title">⚙️ Interview settings</div>
+    <div class="config-row">
+      <div class="config-item">
+        <label>Interview type</label>
+        <select id="cfg-type">
+          <option value="mixed">Mixed (Technical + Behavioral)</option>
+          <option value="technical">Technical only</option>
+          <option value="behavioral">Behavioral only</option>
+        </select>
+      </div>
+      <div class="config-item">
+        <label>Number of questions</label>
+        <select id="cfg-qs">
+          <option value="5">5 questions</option>
+          <option value="8" selected>8 questions</option>
+          <option value="10">10 questions</option>
+        </select>
+      </div>
+      <div class="config-item">
+        <label>Time per question</label>
+        <select id="cfg-time">
+          <option value="90">90 seconds</option>
+          <option value="120" selected>120 seconds</option>
+          <option value="180">180 seconds</option>
+        </select>
+      </div>
+    </div>
+  </div>
+  <button class="btn-primary" id="start-btn" onclick="startInterview()">▶ &nbsp;Start Interview</button>
+  <div id="setup-err" class="err-msg"></div>
+</div>
+
+<!-- INTERVIEW -->
+<div id="screen-interview" class="screen">
+  <div class="iv-header">
+    <div class="iv-meta">
+      <span class="pill pill-q" id="q-counter">Q 1 / 8</span>
+      <span class="pill pill-medium" id="diff-pill">Medium</span>
+    </div>
+    <div class="iv-right">
+      <div class="score-live">
+        <div class="score-live-label">Live score</div>
+        <div class="score-live-val" id="live-score">—</div>
+      </div>
+      <div class="timer-ring">
+        <svg width="52" height="52" viewBox="0 0 52 52">
+          <circle cx="26" cy="26" r="22" fill="none" stroke="#e5e7eb" stroke-width="3.5"/>
+          <circle id="timer-arc" cx="26" cy="26" r="22" fill="none" stroke="#4f46e5" stroke-width="3.5" stroke-linecap="round" stroke-dasharray="138.2" stroke-dashoffset="0"/>
+        </svg>
+        <div class="timer-text" id="timer-text">—</div>
+      </div>
+    </div>
+  </div>
+  <div class="progress-wrap"><div class="progress-track"><div class="progress-fill" id="progress-fill" style="width:0%"></div></div></div>
+  <div class="q-card">
+    <div class="q-type-tag" id="q-type-label">Loading...</div>
+    <div class="q-body" id="q-body">Preparing your question...</div>
+    <div class="q-hint" id="q-hint" style="display:none"></div>
+  </div>
+  <textarea id="answer-input" placeholder="Type your answer here..."></textarea>
+  <div class="action-row">
+    <button class="btn-primary" id="submit-btn" onclick="submitAnswer()">Submit answer</button>
+    <button class="btn-secondary" onclick="skipQuestion()">Skip</button>
+  </div>
+  <div class="eval-panel" id="eval-panel">Your answer will be evaluated on accuracy, clarity, depth, relevance, and time efficiency.</div>
+  <div class="threshold-section">
+    <div class="th-header"><span>Performance vs threshold</span><span id="th-label">Tracking...</span></div>
+    <div class="th-track"><div class="th-fill" id="th-fill" style="width:50%;background:#4f46e5;"></div><div class="th-marker"></div></div>
+  </div>
+  <div class="history-list" id="history-list"></div>
+</div>
+
+<!-- TERMINATED -->
+<div id="screen-terminated" class="screen">
+  <div class="terminated-wrap">
+    <div class="terminated-icon-wrap">🚫</div>
+    <h2>Interview terminated early</h2>
+    <p>Your performance fell below the minimum threshold after multiple consecutive weak answers. This mirrors real interviews where a candidate may be dismissed early.</p>
+    <button class="btn-primary" onclick="showResults()">View partial results →</button>
+  </div>
+</div>
+
+<!-- RESULTS -->
+<div id="screen-results" class="screen">
+  <div class="results-top">
+    <div class="score-ring-wrap">
+      <div class="score-ring">
+        <svg width="140" height="140" viewBox="0 0 140 140">
+          <circle cx="70" cy="70" r="60" fill="none" stroke="#e5e7eb" stroke-width="9"/>
+          <circle id="ring-circle" cx="70" cy="70" r="60" fill="none" stroke="#4f46e5" stroke-width="9" stroke-linecap="round" stroke-dasharray="376.99" stroke-dashoffset="376.99" style="transition:stroke-dashoffset 1.2s ease,stroke .5s"/>
+        </svg>
+        <div class="score-ring-inner">
+          <span class="score-big" id="final-score-num">0</span>
+          <span class="score-sub">out of 100</span>
+        </div>
+      </div>
+    </div>
+    <div id="readiness-badge" class="readiness-badge rb-avg">Average</div>
+    <p style="font-size:14px;color:var(--muted);margin-top:8px;" id="readiness-sub">Interview complete</p>
+  </div>
+  <div class="results-grid">
+    <div class="result-card"><div class="rc-head">📊 Skill breakdown</div><div id="skill-breakdown"></div></div>
+    <div class="result-card"><div class="rc-head">✅ Strengths</div><ul class="sw-list" id="strengths-list"></ul></div>
+    <div class="result-card" style="grid-column:1/-1"><div class="rc-head">⚠️ Areas to improve</div><ul class="sw-list" id="weaknesses-list"></ul></div>
+  </div>
+  <div class="feedback-block"><h3>💡 Actionable feedback</h3><div id="feedback-items"></div></div>
+  <div class="hiring-block">
+    <div class="hiring-icon-wrap" id="hiring-icon">🎯</div>
+    <div><div class="hiring-title" id="hiring-title">Hiring readiness</div><div class="hiring-detail" id="hiring-detail">Analyzing your fit...</div></div>
+  </div>
+  <div class="q-sessions"><h3>📋 Question-by-question review</h3><div id="sessions-list"></div></div>
+  <button class="btn-secondary" style="width:100%;padding:13px;font-size:14px;" onclick="resetApp()">↺ &nbsp;Start a new interview</button>
+</div>
+</main>
+<footer>AI Mock Interview Platform &nbsp;·&nbsp; Intelligent offline evaluation engine</footer>
+
+<script>
+// ─── QUESTION BANK ───────────────────────────────────────────────
+const QB = {
+  technical: {
+    easy: [
+      {q:"What is the difference between a list and a tuple in Python?", hint:"Mutability, use cases, performance", kw:["mutable","immutable","ordered","tuple","list"]},
+      {q:"Explain what an API is and how REST APIs work.", hint:"HTTP methods, stateless, endpoints, request/response", kw:["http","endpoint","stateless","get","post","json"]},
+      {q:"What is the difference between SQL and NoSQL databases?", hint:"Schema, scalability, use cases, examples", kw:["schema","relational","document","scalability","mongodb","postgresql"]},
+      {q:"What is version control and why is Git important?", hint:"Tracking changes, collaboration, branching", kw:["commit","branch","merge","repository","collaboration","history"]},
+      {q:"What is Object-Oriented Programming? Name its four pillars.", hint:"Encapsulation, inheritance, polymorphism, abstraction", kw:["encapsulation","inheritance","polymorphism","abstraction","class","object"]},
+      {q:"What is the difference between HTTP and HTTPS?", hint:"SSL/TLS, encryption, security, certificates", kw:["ssl","tls","encryption","secure","certificate","port"]},
+      {q:"What is a database index and why is it used?", hint:"Speed up queries, trade-off with write performance", kw:["query","performance","search","btree","slow","fast"]},
+      {q:"Explain the concept of recursion with an example.", hint:"Base case, recursive case, stack", kw:["base case","recursive","stack","factorial","fibonacci","call"]},
+    ],
+    medium: [
+      {q:"Explain the difference between synchronous and asynchronous programming. When would you use async?", hint:"Blocking, non-blocking, I/O bound tasks, event loop", kw:["blocking","non-blocking","async","await","event loop","io","concurrency"]},
+      {q:"What are database transactions and what does ACID mean?", hint:"Atomicity, Consistency, Isolation, Durability", kw:["atomicity","consistency","isolation","durability","rollback","commit","acid"]},
+      {q:"What is caching and how does Redis help with application performance?", hint:"In-memory, TTL, cache hit/miss, use cases", kw:["in-memory","ttl","cache hit","eviction","redis","performance","latency"]},
+      {q:"Explain microservices architecture vs monolithic architecture.", hint:"Scalability, deployment, communication, trade-offs", kw:["monolith","service","scalability","deployment","api gateway","communication","docker"]},
+      {q:"What are design patterns? Explain Singleton and Factory patterns.", hint:"Reusable solutions, creational patterns, examples", kw:["singleton","factory","pattern","reusable","instance","creational","design"]},
+      {q:"How does indexing work in databases and what are the trade-offs?", hint:"B-tree, composite index, write overhead, query planner", kw:["btree","composite","write overhead","query planner","covering index","trade-off"]},
+      {q:"Explain the concept of load balancing and its algorithms.", hint:"Round robin, least connections, consistent hashing", kw:["round robin","least connections","consistent hashing","distribute","traffic","server"]},
+      {q:"What is Docker and how does containerization differ from virtualization?", hint:"Containers, images, OS-level vs hardware-level isolation", kw:["container","image","virtual machine","os","isolation","lightweight","portability"]},
+    ],
+    hard: [
+      {q:"How would you design a URL shortener system like bit.ly that handles 1 billion URLs?", hint:"Hash function, database choice, caching, scalability, redirects", kw:["hash","base62","cache","database","sharding","cdn","redirect","scale"]},
+      {q:"Explain CAP theorem and how it affects distributed system design.", hint:"Consistency, Availability, Partition tolerance — only 2 of 3", kw:["consistency","availability","partition","cap","distributed","trade-off","eventual"]},
+      {q:"How would you optimize a slow SQL query that takes 30 seconds on a table with 100 million rows?", hint:"EXPLAIN, indexes, query rewriting, partitioning, caching", kw:["explain","index","partition","query plan","join","subquery","composite","cache"]},
+      {q:"Design a rate limiting system for an API that allows 100 requests per minute per user.", hint:"Token bucket, sliding window, Redis, distributed locks", kw:["token bucket","sliding window","redis","distributed","counter","ttl","429"]},
+      {q:"How does garbage collection work in modern languages? Compare JVM GC and Python GC.", hint:"Mark-and-sweep, generational GC, reference counting, stop-the-world", kw:["mark sweep","generational","reference counting","heap","stop the world","young generation"]},
+      {q:"Explain consistent hashing and where it is used in distributed systems.", hint:"Virtual nodes, ring, minimal remapping, used in CDNs and caches", kw:["ring","virtual node","remapping","hash function","node","consistent","distributed cache"]},
+    ]
+  },
+  behavioral: {
+    easy: [
+      {q:"Tell me about yourself and why you are interested in this role.", hint:"Background, skills, motivation, fit with company", kw:["experience","skills","motivated","role","fit","background","goal"]},
+      {q:"Describe a project you are most proud of. What was your contribution?", hint:"Specific project, your role, impact, outcome", kw:["project","contribution","impact","built","achieved","result","team"]},
+      {q:"How do you prioritize tasks when you have multiple deadlines?", hint:"Prioritization framework, communication, time management", kw:["priority","deadline","urgent","important","communicate","organize","plan"]},
+      {q:"Describe a time you worked in a team. What was your role?", hint:"Collaboration, communication, conflict resolution", kw:["team","collaborate","communicate","role","conflict","resolve","support"]},
+    ],
+    medium: [
+      {q:"Tell me about a time you faced a significant technical challenge. How did you solve it?", hint:"Specific challenge, steps taken, outcome, learning", kw:["challenge","debug","research","solution","learned","outcome","steps"]},
+      {q:"Describe a situation where you disagreed with your team or manager. How did you handle it?", hint:"Respectful disagreement, evidence, compromise, outcome", kw:["disagree","communicate","evidence","compromise","respect","outcome","listen"]},
+      {q:"Tell me about a time you had to learn a new technology quickly. How did you approach it?", hint:"Learning strategy, resources, timeline, application", kw:["learn","documentation","practice","apply","timeline","resource","hands-on"]},
+      {q:"Describe a time you made a mistake in production. What happened and what did you do?", hint:"Ownership, immediate fix, root cause analysis, prevention", kw:["mistake","fix","root cause","ownership","post-mortem","prevent","communicate"]},
+    ],
+    hard: [
+      {q:"Tell me about a time you had to make a difficult technical decision with incomplete information.", hint:"Decision framework, risk assessment, stakeholder communication, outcome", kw:["decision","risk","incomplete","stakeholder","framework","outcome","trade-off"]},
+      {q:"Describe a situation where you had to lead a project or team without formal authority.", hint:"Influence, alignment, communication, results", kw:["influence","align","communicate","lead","consensus","result","motivation"]},
+      {q:"Tell me about a time you significantly improved a system's performance or process.", hint:"Metrics before/after, approach, impact, collaboration", kw:["metrics","before","after","optimize","impact","approach","collaborate"]},
+    ]
+  },
+  conceptual: {
+    easy: [
+      {q:"What is Big O notation and why does it matter in programming?", hint:"Time complexity, space complexity, O(n), O(log n), examples", kw:["time complexity","space","o(n)","o(log n)","performance","algorithm","efficiency"]},
+      {q:"Explain the difference between frontend and backend development.", hint:"Client-side, server-side, responsibilities, technologies", kw:["client","server","browser","database","api","html","css","javascript"]},
+    ],
+    medium: [
+      {q:"What is CI/CD and how does it improve software development?", hint:"Continuous integration, deployment, automation, testing", kw:["continuous","integration","deployment","pipeline","automate","test","build","jenkins"]},
+      {q:"Explain the concept of technical debt. How do you manage it?", hint:"Short-term shortcuts, long-term cost, refactoring, prioritization", kw:["shortcut","refactor","maintainability","cost","priority","documentation","legacy"]},
+    ],
+    hard: [
+      {q:"How would you approach building a highly available system with 99.99% uptime?", hint:"Redundancy, failover, monitoring, SLA, disaster recovery", kw:["redundancy","failover","monitoring","sla","disaster recovery","replica","health check"]},
+      {q:"Explain event-driven architecture and when you would choose it over request-response.", hint:"Events, pub/sub, decoupling, eventual consistency, Kafka", kw:["event","pub sub","kafka","decouple","eventual consistency","async","message queue"]},
+    ]
+  },
+  scenario: {
+    medium: [
+      {q:"Your deployed application suddenly starts returning 500 errors for 20% of requests. Walk me through how you would diagnose and fix this.", hint:"Logs, monitoring, recent deployments, rollback, hotfix", kw:["logs","monitor","deploy","rollback","debug","alert","trace","recent change"]},
+      {q:"You need to migrate a live database with 50 million records to a new schema with zero downtime. How would you do it?", hint:"Blue-green, dual write, backfill, feature flags, rollback plan", kw:["blue green","dual write","backfill","feature flag","rollback","zero downtime","migration"]},
+    ],
+    hard: [
+      {q:"Your company's API is being hammered by a DDoS attack. What steps do you take in the next 30 minutes?", hint:"Rate limiting, IP blocking, CDN, alerting, communication", kw:["rate limit","ip block","cdn","firewall","alert","communicate","ddos","throttle"]},
+      {q:"A critical bug is found in production 30 minutes before a major product launch. What do you do?", hint:"Assess severity, fix vs delay, communication, rollback", kw:["severity","hotfix","rollback","communicate","delay","stakeholder","decision","risk"]},
+    ]
+  }
+};
+
+// ─── KEYWORD SCORING ENGINE ──────────────────────────────────────
+function scoreAnswer(answer, question, timeUsed, timeLimit) {
+  if (!answer || answer.trim().length < 5) {
+    return { score:0, accuracy:0, clarity:0, depth:0, relevance:0, time_eff:0, verdict:"No meaningful answer provided." };
+  }
+  const ans = answer.toLowerCase();
+  const words = ans.split(/\s+/).filter(w => w.length > 2);
+  const wordCount = words.length;
+
+  // Keyword matching
+  const kw = question.kw || [];
+  const matched = kw.filter(k => ans.includes(k.toLowerCase()));
+  const kwScore = kw.length > 0 ? matched.length / kw.length : 0.5;
+
+  // Accuracy: based on keyword matches
+  const accuracy = Math.round(Math.min(10, 3 + kwScore * 8));
+
+  // Clarity: based on sentence structure and length
+  const sentences = answer.split(/[.!?]+/).filter(s => s.trim().length > 5);
+  const avgSentLen = wordCount / Math.max(sentences.length, 1);
+  const clarityRaw = sentences.length >= 2 && avgSentLen >= 5 && avgSentLen <= 25 ? 7 : 5;
+  const clarity = Math.round(Math.min(10, clarityRaw + (wordCount > 30 ? 1 : 0) + (wordCount > 60 ? 1 : 0)));
+
+  // Depth: based on answer length and keyword density
+  const depthRaw = wordCount < 15 ? 2 : wordCount < 40 ? 5 : wordCount < 80 ? 7 : 8;
+  const depth = Math.round(Math.min(10, depthRaw + kwScore * 2));
+
+  // Relevance: keyword + basic topic overlap
+  const relevance = Math.round(Math.min(10, 3 + kwScore * 7));
+
+  // Time efficiency
+  const timeRatio = timeUsed / timeLimit;
+  const time_eff = timeUsed === 0 ? 0 :
+    timeRatio > 1.0 ? 3 :
+    timeRatio > 0.9 ? 6 :
+    timeRatio > 0.3 ? 9 : 7;
+
+  // Weighted final score
+  const score = Math.round(
+    accuracy * 0.25 +
+    clarity  * 0.20 +
+    depth    * 0.25 +
+    relevance* 0.20 +
+    time_eff * 0.10
+  );
+
+  // Verdict
+  const verdicts = {
+    high: ["Strong answer covering key concepts well.", "Excellent depth and clarity in your response.", "Good coverage of the topic with relevant points."],
+    mid:  ["Decent answer but could use more depth.", "Good start — try to include more specific examples.", "Covers basics but misses some important aspects."],
+    low:  ["Answer lacks depth — try to elaborate more.", "Key concepts were missing from your response.", "Consider structuring your answer more clearly."]
+  };
+  const vGroup = score >= 7 ? "high" : score >= 5 ? "mid" : "low";
+  const verdict = verdicts[vGroup][Math.floor(Math.random() * 3)];
+
+  // Next difficulty
+  const next_difficulty = score >= 8 ? "hard" : score >= 5 ? "medium" : "easy";
+
+  return { score, accuracy, clarity, depth, relevance, time_eff, verdict, next_difficulty };
+}
+
+// ─── QUESTION SELECTOR ───────────────────────────────────────────
+function pickQuestion(type, difficulty, usedQs) {
+  const types = type === "technical" ? ["technical","conceptual","scenario"] :
+                type === "behavioral" ? ["behavioral"] :
+                ["technical","behavioral","conceptual","scenario"];
+
+  // Shuffle and pick
+  const shuffled = types.sort(() => Math.random() - 0.5);
+  for (const t of shuffled) {
+    const pool = (QB[t] || {})[difficulty] || (QB[t] || {})["medium"] || [];
+    const unused = pool.filter(q => !usedQs.includes(q.q));
+    if (unused.length > 0) {
+      const q = unused[Math.floor(Math.random() * unused.length)];
+      const typeLabel = t.charAt(0).toUpperCase() + t.slice(1);
+      return { type: typeLabel, text: q.q, hint: q.hint, kw: q.kw };
+    }
+  }
+  // Fallback: allow repeats
+  const allQ = Object.values(QB).flatMap(d => Object.values(d).flat());
+  const q = allQ[Math.floor(Math.random() * allQ.length)];
+  return { type: "Technical", text: q.q, hint: q.hint, kw: q.kw };
+}
+
+// ─── APP STATE ───────────────────────────────────────────────────
+let S = {
+  resume:"", jd:"", type:"mixed", totalQs:8, timePerQ:120,
+  currentQ:0, difficulty:"medium", consecutiveWeak:0,
+  questions:[], scores:[], answers:[], usedQs:[],
+  terminated:false, timerInterval:null, timeLeft:0
+};
+
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById('screen-'+id).classList.add('active');
+  window.scrollTo(0,0);
+}
+
+function startInterview() {
+  const resume = document.getElementById('resume-input').value.trim();
+  const jd     = document.getElementById('jd-input').value.trim();
+  const err    = document.getElementById('setup-err');
+  if (!resume) { err.style.display='block'; err.textContent='Please paste your resume.'; return; }
+  if (!jd)     { err.style.display='block'; err.textContent='Please paste the job description.'; return; }
+  err.style.display = 'none';
+  S = {
+    resume, jd,
+    type: document.getElementById('cfg-type').value,
+    totalQs: parseInt(document.getElementById('cfg-qs').value),
+    timePerQ: parseInt(document.getElementById('cfg-time').value),
+    currentQ:0, difficulty:"medium", consecutiveWeak:0,
+    questions:[], scores:[], answers:[], usedQs:[],
+    terminated:false, timerInterval:null, timeLeft:0
+  };
+  const btn = document.getElementById('start-btn');
+  btn.disabled=true; btn.textContent='Starting...';
+  showScreen('interview');
+  updateInterviewHeader();
+  setTimeout(loadNextQuestion, 400);
+}
+
+function loadNextQuestion() {
+  clearInterval(S.timerInterval);
+  document.getElementById('answer-input').value='';
+  document.getElementById('eval-panel').textContent='Your answer will be evaluated on accuracy, clarity, depth, relevance, and time efficiency.';
+  document.getElementById('eval-panel').className='eval-panel';
+  document.getElementById('timer-text').textContent='—';
+  document.getElementById('q-hint').style.display='none';
+
+  const q = pickQuestion(S.type, S.difficulty, S.usedQs);
+  S.questions.push(q);
+  S.usedQs.push(q.text);
+
+  document.getElementById('q-type-label').textContent = q.type + ' question';
+  document.getElementById('q-body').textContent = q.text;
+  document.getElementById('q-hint').textContent = '💡 ' + q.hint;
+  document.getElementById('q-hint').style.display = 'block';
+  document.getElementById('submit-btn').disabled = false;
+  document.getElementById('answer-input').disabled = false;
+  document.getElementById('answer-input').focus();
+  startTimer();
+}
+
+function startTimer() {
+  S.timeLeft = S.timePerQ;
+  updateTimerDisplay();
+  const circ = 138.2;
+  S.timerInterval = setInterval(() => {
+    S.timeLeft--;
+    updateTimerDisplay();
+    const arc = document.getElementById('timer-arc');
+    const offset = circ - (S.timeLeft / S.timePerQ) * circ;
+    arc.style.strokeDashoffset = offset;
+    const pct = S.timeLeft / S.timePerQ;
+    arc.style.stroke = pct > 0.4 ? '#4f46e5' : pct > 0.2 ? '#d97706' : '#dc2626';
+    if (S.timeLeft <= 0) { clearInterval(S.timerInterval); autoSubmit(); }
+  }, 1000);
+}
+
+function updateTimerDisplay() {
+  const t = S.timeLeft;
+  const el = document.getElementById('timer-text');
+  el.textContent = t >= 60 ? Math.floor(t/60)+':'+(t%60).toString().padStart(2,'0') : t+'s';
+  el.className = 'timer-text'+(t<=15?' danger':t<=30?' warn':'');
+}
+
+function autoSubmit() {
+  const ans = document.getElementById('answer-input').value.trim();
+  if (!ans) {
+    S.answers.push('(no answer — timed out)');
+    S.scores.push(0);
+    document.getElementById('eval-panel').textContent='⏰ Time expired with no answer. Score: 0/10';
+    S.consecutiveWeak++;
+    addHistoryItem(S.currentQ);
+    updateThresholdBar();
+    if (checkTermination()) return;
+    setTimeout(nextQuestion, 2500);
+  } else {
+    submitAnswer();
+  }
+}
+
+function submitAnswer() {
+  clearInterval(S.timerInterval);
+  const ans = document.getElementById('answer-input').value.trim();
+  const timeUsed = S.timePerQ - S.timeLeft;
+  const q = S.questions[S.currentQ];
+  document.getElementById('answer-input').disabled = true;
+  document.getElementById('submit-btn').disabled = true;
+  S.answers.push(ans || '(skipped)');
+
+  const ev = scoreAnswer(ans, q, timeUsed, S.timePerQ);
+  S.scores.push(ev.score);
+  S.difficulty = ev.next_difficulty || S.difficulty;
+  if (ev.score <= 3) S.consecutiveWeak++; else S.consecutiveWeak = 0;
+
+  const bc = ev.score>=7?'badge-good':ev.score>=5?'badge-avg':'badge-bad';
+  document.getElementById('eval-panel').innerHTML =
+    `<div class="badges">
+      <span class="badge ${bc}">${ev.score}/10 overall</span>
+      <span class="badge badge-avg">Accuracy ${ev.accuracy}/10</span>
+      <span class="badge badge-avg">Clarity ${ev.clarity}/10</span>
+      <span class="badge badge-avg">Depth ${ev.depth}/10</span>
+      <span class="badge badge-avg">Time ${ev.time_eff}/10</span>
+    </div>
+    <div style="font-size:12px;color:var(--text);margin-top:6px">${ev.verdict}</div>`;
+
+  const avg = S.scores.reduce((a,b)=>a+b,0)/S.scores.length;
+  document.getElementById('live-score').textContent = Math.round(avg*10);
+  addHistoryItem(S.currentQ);
+  updateThresholdBar();
+  if (checkTermination()) return;
+  setTimeout(nextQuestion, 3000);
+}
+
+function skipQuestion() {
+  clearInterval(S.timerInterval);
+  S.answers.push('(skipped)');
+  S.scores.push(1);
+  S.consecutiveWeak++;
+  document.getElementById('eval-panel').textContent='Skipped. Score: 1/10';
+  addHistoryItem(S.currentQ);
+  updateThresholdBar();
+  if (!checkTermination()) setTimeout(nextQuestion, 1500);
+}
+
+function checkTermination() {
+  const avg = S.scores.length>0 ? S.scores.reduce((a,b)=>a+b,0)/S.scores.length : 10;
+  if (S.consecutiveWeak>=3 || (S.scores.length>=3 && avg<2.5)) {
+    S.terminated=true;
+    setTimeout(()=>showScreen('terminated'),1500);
+    return true;
+  }
+  return false;
+}
+
+function nextQuestion() {
+  S.currentQ++;
+  if (S.currentQ >= S.totalQs) { showResults(); return; }
+  updateInterviewHeader();
+  loadNextQuestion();
+}
+
+function updateInterviewHeader() {
+  const n = S.currentQ+1;
+  document.getElementById('q-counter').textContent=`Q ${n} / ${S.totalQs}`;
+  const d = S.difficulty;
+  const dp = document.getElementById('diff-pill');
+  dp.textContent = d.charAt(0).toUpperCase()+d.slice(1);
+  dp.className = 'pill pill-'+d;
+  document.getElementById('progress-fill').style.width=((n-1)/S.totalQs*100)+'%';
+}
+
+function updateThresholdBar() {
+  if (!S.scores.length) return;
+  const avg = S.scores.reduce((a,b)=>a+b,0)/S.scores.length;
+  const pct = Math.round(avg/10*100);
+  const fill = document.getElementById('th-fill');
+  fill.style.width=pct+'%';
+  fill.style.background=pct>=60?'#059669':pct>=35?'#d97706':'#dc2626';
+  document.getElementById('th-label').textContent=`${pct}% (minimum: 30%)`;
+}
+
+function addHistoryItem(i) {
+  const q=S.questions[i], s=S.scores[i];
+  const el=document.createElement('div');
+  el.className='history-item';
+  const col=s>=7?'#059669':s>=5?'#d97706':'#dc2626';
+  el.innerHTML=`<span class="history-q">Q${i+1}: ${q?.text||'Question'}</span><span style="font-weight:600;color:${col}">${s}/10</span>`;
+  const list=document.getElementById('history-list');
+  list.appendChild(el);
+  if (list.children.length>5) list.firstChild.remove();
+}
+
+function showResults() {
+  showScreen('results');
+  const total = S.scores.length>0 ? Math.round(S.scores.reduce((a,b)=>a+b,0)/S.scores.length*10) : 0;
+  document.getElementById('final-score-num').textContent=total;
+  const circ=376.99;
+  const rc=document.getElementById('ring-circle');
+  setTimeout(()=>{ rc.style.strokeDashoffset=circ-(total/100)*circ; },100);
+  rc.style.stroke=total>=70?'#059669':total>=50?'#d97706':'#dc2626';
+
+  const badge=document.getElementById('readiness-badge');
+  if (total>=70){badge.textContent='Strong candidate';badge.className='readiness-badge rb-strong';}
+  else if(total>=50){badge.textContent='Average candidate';badge.className='readiness-badge rb-avg';}
+  else{badge.textContent='Needs improvement';badge.className='readiness-badge rb-weak';}
+
+  document.getElementById('readiness-sub').textContent=
+    S.terminated?'Interview terminated early due to below-threshold performance.':
+    `Completed ${S.scores.length} of ${S.totalQs} questions`;
+
+  // Skill breakdown based on question types answered
+  const typeScores = {};
+  S.questions.forEach((q,i)=>{
+    if(!typeScores[q.type]) typeScores[q.type]={sum:0,count:0};
+    typeScores[q.type].sum+=S.scores[i]||0;
+    typeScores[q.type].count++;
+  });
+  const colors=['#4f46e5','#059669','#d97706','#7c3aed','#0891b2','#dc2626'];
+  const skillKeys = Object.keys(typeScores);
+  document.getElementById('skill-breakdown').innerHTML = skillKeys.map((k,i)=>{
+    const avg=Math.round(typeScores[k].sum/typeScores[k].count);
+    return `<div class="skill-row">
+      <span class="skill-name">${k}</span>
+      <div class="skill-bar-bg"><div class="skill-bar-fill" style="width:${avg*10}%;background:${colors[i%colors.length]}"></div></div>
+      <span class="skill-val">${avg}/10</span>
+    </div>`;
+  }).join('');
+
+  // Strengths and weaknesses based on scores
+  const goodQs = S.questions.filter((_,i)=>S.scores[i]>=7);
+  const badQs  = S.questions.filter((_,i)=>S.scores[i]<=4);
+  const strengths = goodQs.length>0 ?
+    goodQs.slice(0,3).map(q=>`Strong performance on ${q.type.toLowerCase()} questions`) :
+    ["Completed the interview","Attempted all questions","Showed up and practiced"];
+  const weaknesses = badQs.length>0 ?
+    badQs.slice(0,4).map(q=>`Needs improvement: ${q.type} — ${q.text.substring(0,50)}...`) :
+    ["Continue practicing harder questions","Work on answer depth","Practice under time pressure"];
+
+  document.getElementById('strengths-list').innerHTML=strengths.map(s=>`<li><span class="icon">✅</span>${s}</li>`).join('');
+  document.getElementById('weaknesses-list').innerHTML=weaknesses.map(w=>`<li><span class="icon">⚠️</span>${w}</li>`).join('');
+
+  // Feedback
+  const feedbacks = [];
+  const avgScore = S.scores.length>0?S.scores.reduce((a,b)=>a+b,0)/S.scores.length:0;
+  if(avgScore<5) feedbacks.push("Focus on learning core concepts before attempting medium/hard questions.");
+  if(avgScore>=5&&avgScore<7) feedbacks.push("You have a good base — work on adding more depth and examples to your answers.");
+  if(avgScore>=7) feedbacks.push("Great performance! Challenge yourself with system design and complex scenarios.");
+  const skipped=S.answers.filter(a=>a.includes('skipped')||a.includes('timed out')).length;
+  if(skipped>0) feedbacks.push(`You skipped or timed out on ${skipped} question(s) — practice answering under time pressure.`);
+  feedbacks.push("Use the STAR method (Situation, Task, Action, Result) for behavioral questions.");
+  feedbacks.push("Always include real examples and metrics in technical answers to demonstrate experience.");
+  document.getElementById('feedback-items').innerHTML=feedbacks.map(f=>`<div class="feedback-item">${f}</div>`).join('');
+
+  // Hiring verdict
+  const icons={70:'✅',50:'⚠️',0:'❌'};
+  const icon = total>=70?'✅':total>=50?'⚠️':'❌';
+  const title = total>=70?'Recommended for hire':total>=50?'Borderline candidate':'Not yet ready';
+  const detail = total>=70?
+    'Candidate demonstrated strong technical and communication skills aligned with the role requirements.':
+    total>=50?
+    'Candidate shows potential but needs more preparation, especially in depth of technical answers.':
+    'Candidate needs significant improvement before being ready for this role. Continue practicing.';
+  document.getElementById('hiring-icon').textContent=icon;
+  document.getElementById('hiring-title').textContent=title;
+  document.getElementById('hiring-detail').textContent=detail;
+
+  // Q&A review
+  document.getElementById('sessions-list').innerHTML=S.questions.map((q,i)=>{
+    const s=S.scores[i]??0;
+    const col=s>=7?'#059669':s>=5?'#d97706':'#dc2626';
+    return `<div class="session-item">
+      <div class="session-q">[${q.type}] Q${i+1}: ${q.text}</div>
+      <div class="session-ans">${S.answers[i]||'(no answer)'}</div>
+      <div class="session-score" style="color:${col}">Score: ${s}/10</div>
+    </div>`;
+  }).join('');
+}
+
+function resetApp() {
+  clearInterval(S.timerInterval);
+  document.getElementById('history-list').innerHTML='';
+  const btn=document.getElementById('start-btn');
+  btn.disabled=false; btn.textContent='▶ Start Interview';
+  showScreen('setup');
+}
+</script>
+</body>
+</html>
